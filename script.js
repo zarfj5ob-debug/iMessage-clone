@@ -49,13 +49,28 @@ chat.scrollTop=chat.scrollHeight;
 
 function botReply(message){
 
-message=message.toLowerCase();
+message = message.toLowerCase();
 
-if(message.includes("hi")) return "Hi 😊";
+if(message.includes("name"))
+    return `My name is ${personality.name}!`;
 
-if(message.includes("hello")) return "Hello!";
+if(message.includes("favorite color"))
+    return `Definitely ${personality.favoriteColor}.`;
 
-if(message.includes("how are you")) return "I'm doing great!";
+if(message.includes("food"))
+    return `I could eat ${personality.favoriteFood} every day.`;
 
-return "Tell me more!";
+if(message.includes("hobby"))
+    return "I love " + personality.hobbies.join(", ");
+
+if(message.includes("like"))
+    return "I like " + personality.likes.join(", ");
+
+if(message.includes("dislike"))
+    return "I don't really like " + personality.dislikes.join(", ");
+
+if(message.includes("how are you"))
+    return "I'm doing really well 😊";
+
+return "That's interesting! Tell me more.";
 }
