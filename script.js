@@ -1,4 +1,14 @@
-const chat = document.getElementById("chat");
+function currentTime(){
+
+return new Date().toLocaleTimeString([],{
+
+hour:"numeric",
+
+minute:"2-digit"
+
+});
+
+}chat = document.getElementById("chat");
 const input = document.getElementById("messageInput");
 const button = document.getElementById("sendButton");
 const typing = document.getElementById("typing");
