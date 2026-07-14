@@ -22,6 +22,7 @@ mine.className="message blue";
 mine.textContent=input.value;
 
 chat.appendChild(mine);
+chat.scrollTop = chat.scrollHeight;
 
 typing.classList.remove("hidden");
 
@@ -39,7 +40,10 @@ reply.className="message gray";
 
 reply.textContent=botReply(text);
 
-chat.appendChild(reply);
+chat.appendChild(chat.scrollTo({
+    top: chat.scrollHeight,
+    behavior: "smooth"
+});
 
 chat.scrollTop=chat.scrollHeight;
 
