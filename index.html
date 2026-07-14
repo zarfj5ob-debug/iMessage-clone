@@ -1,9 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>My iMessage Chatbot</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messages</title>
+
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-    <h1>It works! 🎉</h1>
+
+<div class="phone">
+
+<div class="header">
+<div class="back">‹</div>
+
+<div class="contact">
+<div class="avatar"></div>
+
+<div>
+<div class="name">Emma</div>
+<div class="status">Active now</div>
+</div>
+
+</div>
+
+<div class="info">ⓘ</div>
+</div>
+
+<div id="chat" class="chat">
+
+<div class="message gray">
+Hey 😊
+</div>
+
+<div class="message blue">
+Hi!
+</div>
+
+</div>
+
+<div id="typing" class="typing hidden">
+Typing...
+</div>
+
+<div class="inputBar">
+
+<input
+id="messageInput"
+placeholder="iMessage"
+/>
+
+<button id="sendButton">
+↑
+</button>
+
+</div>
+
+</div>
+
+<script src="script.js"></script>
+
 </body>
 </html>
