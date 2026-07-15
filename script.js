@@ -1,90 +1,140 @@
-function currentTime(){
-
-return new Date().toLocaleTimeString([],{
-
-hour:"numeric",
-
-minute:"2-digit"
-
-});
-
-}chat = document.getElementById("chat");
+const chat = document.getElementById("chat");
 const input = document.getElementById("messageInput");
 const button = document.getElementById("sendButton");
 const typing = document.getElementById("typing");
 
-button.onclick = send;
+let messages = Memory.load();
 
-input.addEventListener("keydown", e=>{
-if(e.key==="Enter"){
-send();
+function currentTime() {
+    return new Date().toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit"
+    });
 }
+
+function createMessage(text, type) {
+
+    const wrapper = document.createElement("div");
+
+    wrapper.className = "message " + type;
+
+    wrapper.innerHTML = `
+        ${text}
+        <div class="time">${currentTime()}</div>
+    `;
+
+    chat.appendChild(wrapper);
+
+    chat.scrollTo({
+        top: chat.scrollHeight,
+        behavior: "smooth"
+    });
+
+    return wrapper;
+}
+
+function saveChat(){
+
+    const data=[];
+
+    document.querySelectorAll(".message").forEach(m=>{
+
+        data.push({
+
+            html:m.innerHTML,
+
+            class:m.className
+
+        });
+
+    });
+
+    Memory.save(data);
+
+}
+
+function loadChat(){
+
+    messages.forEach(msg=>{
+
+        const div=document.createElement("div");
+
+        div.className=msg.class;
+
+        div.innerHTML=msg.html;
+
+        chat.appendChild(div);
+
+    });
+
+    chat.scrollTop=chat.scrollHeight;
+
+}
+
+loadChat();
+
+button.onclick=send;
+
+input.addEventListener("keydown",e=>{
+
+    if(e.key==="Enter"){
+
+        send();
+
+    }
+
 });
 
 function send(){
 
-if(input.value==="") return;
+    if(input.value.trim()==="") return;
 
-const mine=document.createElement("div");
+    const text=input.value;
 
-mine.className="message blue";
+    createMessage(text,"blue");
 
-mine.textContent=input.value;
+    saveChat();
 
-chat.appendChild(mine);
-chat.scrollTop = chat.scrollHeight;
+    input.value="";
 
-typing.classList.remove("hidden");
+    typing.classList.remove("hidden");
 
-const text=input.value;
+    const delay=Math.floor(
 
-input.value="";
+        Math.random()*1200
 
-setTimeout(()=>{
+    )+1200;
 
-typing.classList.add("hidden");
+    setTimeout(()=>{
 
-const reply=document.createElement("div");
+        typing.classList.add("hidden");
 
-reply.className="message gray";
+        createMessage(botReply(text),"gray");
 
-reply.textContent=botReply(text);
+        saveChat();
 
-chat.appendChild(chat.scrollTo({
-    top: chat.scrollHeight,
-    behavior: "smooth"
-});
-
-chat.scrollTop=chat.scrollHeight;
-
-},1500);
+    },delay);
 
 }
 
 function botReply(message){
 
-message = message.toLowerCase();
+    message=message.toLowerCase();
 
-if(message.includes("name"))
-    return `My name is ${personality.name}!`;
+    if(message.includes("name"))
+        return `My name is ${personality.name} 😊`;
 
-if(message.includes("favorite color"))
-    return `Definitely ${personality.favoriteColor}.`;
+    if(message.includes("favorite color"))
+        return `My favorite color is ${personality.favoriteColor}.`;
 
-if(message.includes("food"))
-    return `I could eat ${personality.favoriteFood} every day.`;
+    if(message.includes("food"))
+        return `I love ${personality.favoriteFood}!`;
 
-if(message.includes("hobby"))
-    return "I love " + personality.hobbies.join(", ");
+    if(message.includes("like"))
+        return "I like " + personality.likes.join(", ");
 
-if(message.includes("like"))
-    return "I like " + personality.likes.join(", ");
+    if(message.includes("hobby"))
+        return "I enjoy " + personality.hobbies.join(", ");
 
-if(message.includes("dislike"))
-    return "I don't really like " + personality.dislikes.join(", ");
-
-if(message.includes("how are you"))
-    return "I'm doing really well 😊";
-
-return "That's interesting! Tell me more.";
+    return "That's really interesting. Tell me more!";
 }
