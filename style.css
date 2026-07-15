@@ -127,3 +127,15 @@ transform:translateY(0px);
 }
 
 }
+
+.time{
+
+font-size:11px;
+
+margin-top:6px;
+
+opacity:.7;
+
+text-align:right;
+
+}
