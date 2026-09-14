@@ -3,7 +3,13 @@ const input = document.getElementById("messageInput");
 const button = document.getElementById("sendButton");
 const typing = document.getElementById("typing");
 
-let messages = Memory.load();
+let messages = [];
+
+try {
+    messages = Memory.load() || [];
+} catch (error) {
+    messages = [];
+}
 
 function currentTime() {
     return new Date().toLocaleTimeString([], {
@@ -12,16 +18,19 @@ function currentTime() {
     });
 }
 
-function createMessage(text, type) {
-
+function createMessage(text, type, time = currentTime()) {
     const wrapper = document.createElement("div");
-
     wrapper.className = "message " + type;
 
-    wrapper.innerHTML = `
-        ${text}
-        <div class="time">${currentTime()}</div>
-    `;
+    const textElement = document.createElement("div");
+    textElement.textContent = text;
+
+    const timeElement = document.createElement("div");
+    timeElement.className = "time";
+    timeElement.textContent = time;
+
+    wrapper.appendChild(textElement);
+    wrapper.appendChild(timeElement);
 
     chat.appendChild(wrapper);
 
@@ -29,112 +38,144 @@ function createMessage(text, type) {
         top: chat.scrollHeight,
         behavior: "smooth"
     });
-
-    return wrapper;
 }
 
-function saveChat(){
+function saveChat() {
+    const data = [];
 
-    const data=[];
+    document.querySelectorAll(".message").forEach(message => {
+        const textElement = message.querySelector("div");
+        const timeElement = message.querySelector(".time");
 
-    document.querySelectorAll(".message").forEach(m=>{
+        if (!textElement) return;
 
         data.push({
-
-            html:m.innerHTML,
-
-            class:m.className
-
+            text: textElement.textContent,
+            type: message.classList.contains("blue") ? "blue" : "gray",
+            time: timeElement ? timeElement.textContent : currentTime()
         });
-
     });
 
     Memory.save(data);
-
 }
 
-function loadChat(){
+function loadChat() {
+    if (!Array.isArray(messages) || messages.length === 0) {
+        createMessage(
+            `Hey! I'm ${personality.name} 😊`,
+            "gray"
+        );
 
-    messages.forEach(msg=>{
+        createMessage(
+            "You can talk to me about anything.",
+            "gray"
+        );
 
-        const div=document.createElement("div");
+        saveChat();
+        return;
+    }
 
-        div.className=msg.class;
-
-        div.innerHTML=msg.html;
-
-        chat.appendChild(div);
-
+    messages.forEach(message => {
+        // Support the older version of the chat memory
+        if (message.text) {
+            createMessage(
+                message.text,
+                message.type || "gray",
+                message.time || currentTime()
+            );
+        }
     });
 
-    chat.scrollTop=chat.scrollHeight;
-
+    chat.scrollTop = chat.scrollHeight;
 }
 
 loadChat();
 
-button.onclick=send;
+button.addEventListener("click", send);
 
-input.addEventListener("keydown",e=>{
-
-    if(e.key==="Enter"){
-
+input.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
         send();
-
     }
-
 });
 
-function send(){
+function send() {
+    const text = input.value.trim();
 
-    if(input.value.trim()==="") return;
+    if (text === "") return;
 
-    const text=input.value;
-
-    createMessage(text,"blue");
-
+    createMessage(text, "blue");
     saveChat();
 
-    input.value="";
+    input.value = "";
 
     typing.classList.remove("hidden");
 
-    const delay=Math.floor(
+    const delay =
+        Math.floor(
+            Math.random() *
+            (APP_CONFIG.typing.maximumDelay -
+            APP_CONFIG.typing.minimumDelay)
+        ) +
+        APP_CONFIG.typing.minimumDelay;
 
-        Math.random()*1200
-
-    )+1200;
-
-    setTimeout(()=>{
-
+    setTimeout(() => {
         typing.classList.add("hidden");
 
-        createMessage(botReply(text),"gray");
+        const reply = botReply(text);
 
+        createMessage(reply, "gray");
         saveChat();
 
-    },delay);
-
+    }, delay);
 }
 
-function botReply(message){
+function botReply(message) {
+    const text = message.toLowerCase();
 
-    message=message.toLowerCase();
-
-    if(message.includes("name"))
+    if (text.includes("what is your name") ||
+        text.includes("what's your name") ||
+        text === "name") {
         return `My name is ${personality.name} 😊`;
+    }
 
-    if(message.includes("favorite color"))
-        return `My favorite color is ${personality.favoriteColor}.`;
+    if (text.includes("favorite color")) {
+        return `My favorite color is ${personality.favoriteColor} 💙`;
+    }
 
-    if(message.includes("food"))
-        return `I love ${personality.favoriteFood}!`;
+    if (text.includes("favorite food") ||
+        text.includes("what food")) {
+        return `I love ${personality.favoriteFood}! 🍣`;
+    }
 
-    if(message.includes("like"))
-        return "I like " + personality.likes.join(", ");
+    if (text.includes("hobby") ||
+        text.includes("hobbies")) {
+        return `I enjoy ${personality.hobbies.join(", ")}.`;
+    }
 
-    if(message.includes("hobby"))
-        return "I enjoy " + personality.hobbies.join(", ");
+    if (text.includes("what do you like") ||
+        text.includes("what do you like?")) {
+        return `I like ${personality.likes.join(", ")} 😊`;
+    }
 
-    return "That's really interesting. Tell me more!";
+    if (text.includes("hello") ||
+        text === "hey" ||
+        text === "hi" ||
+        text.includes("hey ")) {
+        return "Heyyy 😊 what's up?";
+    }
+
+    if (text.includes("how are you")) {
+        return "I'm doing pretty good 😊 How are you?";
+    }
+
+    if (text.includes("good morning")) {
+        return "Good morninggg ☀️😊";
+    }
+
+    if (text.includes("good night")) {
+        return "Goodnight ❤️ sleep well!";
+    }
+
+    return "That's interesting 👀 tell me more.";
 }
