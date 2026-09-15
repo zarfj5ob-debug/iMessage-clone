@@ -51,8 +51,12 @@ function saveChat() {
 
         data.push({
             text: textElement.textContent,
-            type: message.classList.contains("blue") ? "blue" : "gray",
-            time: timeElement ? timeElement.textContent : currentTime()
+            type: message.classList.contains("blue")
+                ? "blue"
+                : "gray",
+            time: timeElement
+                ? timeElement.textContent
+                : currentTime()
         });
     });
 
@@ -60,14 +64,16 @@ function saveChat() {
 }
 
 function loadChat() {
+
     if (!Array.isArray(messages) || messages.length === 0) {
+
         createMessage(
             `Hey! I'm ${personality.name} 😊`,
             "gray"
         );
 
         createMessage(
-            "You can talk to me about anything.",
+            "What's up?",
             "gray"
         );
 
@@ -76,14 +82,17 @@ function loadChat() {
     }
 
     messages.forEach(message => {
-        // Support the older version of the chat memory
+
         if (message.text) {
+
             createMessage(
                 message.text,
                 message.type || "gray",
                 message.time || currentTime()
             );
+
         }
+
     });
 
     chat.scrollTop = chat.scrollHeight;
@@ -94,88 +103,110 @@ loadChat();
 button.addEventListener("click", send);
 
 input.addEventListener("keydown", event => {
+
     if (event.key === "Enter") {
         send();
     }
+
 });
 
-function send() {
+async function send() {
+
     const text = input.value.trim();
 
-    if (text === "") return;
+    if (!text) return;
 
     createMessage(text, "blue");
+
     saveChat();
 
     input.value = "";
 
     typing.classList.remove("hidden");
 
-    const delay =
-        Math.floor(
-            Math.random() *
-            (APP_CONFIG.typing.maximumDelay -
-            APP_CONFIG.typing.minimumDelay)
-        ) +
-        APP_CONFIG.typing.minimumDelay;
+    try {
 
-    setTimeout(() => {
+        const reply = await getAIReply(text);
+
         typing.classList.add("hidden");
 
-        const reply = botReply(text);
+        createMessage(
+            reply,
+            "gray"
+        );
 
-        createMessage(reply, "gray");
         saveChat();
 
-    }, delay);
+    } catch (error) {
+
+        console.error(error);
+
+        typing.classList.add("hidden");
+
+        createMessage(
+            "Sorry, I couldn't connect right now. 😕",
+            "gray"
+        );
+
+        saveChat();
+    }
 }
 
-function botReply(message) {
-    const text = message.toLowerCase();
+async function getAIReply(message) {
 
-    if (text.includes("what is your name") ||
-        text.includes("what's your name") ||
-        text === "name") {
-        return `My name is ${personality.name} 😊`;
+    const endpoint = APP_CONFIG.backend.apiEndpoint;
+
+    if (!endpoint) {
+        throw new Error("AI endpoint has not been connected.");
     }
 
-    if (text.includes("favorite color")) {
-        return `My favorite color is ${personality.favoriteColor} 💙`;
+    const recentMessages = messagesForAI();
+
+    const response = await fetch(endpoint, {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+
+            message: message,
+
+            history: recentMessages,
+
+            personality: personality
+
+        })
+
+    });
+
+    if (!response.ok) {
+
+        const errorText = await response.text();
+
+        throw new Error(
+            "AI server error: " + errorText
+        );
     }
 
-    if (text.includes("favorite food") ||
-        text.includes("what food")) {
-        return `I love ${personality.favoriteFood}! 🍣`;
+    const data = await response.json();
+
+    if (!data.reply) {
+        throw new Error("No AI reply received.");
     }
 
-    if (text.includes("hobby") ||
-        text.includes("hobbies")) {
-        return `I enjoy ${personality.hobbies.join(", ")}.`;
+    return data.reply;
+}
+
+function messagesForAI() {
+
+    const saved = Memory.load();
+
+    if (!Array.isArray(saved)) {
+        return [];
     }
 
-    if (text.includes("what do you like") ||
-        text.includes("what do you like?")) {
-        return `I like ${personality.likes.join(", ")} 😊`;
-    }
-
-    if (text.includes("hello") ||
-        text === "hey" ||
-        text === "hi" ||
-        text.includes("hey ")) {
-        return "Heyyy 😊 what's up?";
-    }
-
-    if (text.includes("how are you")) {
-        return "I'm doing pretty good 😊 How are you?";
-    }
-
-    if (text.includes("good morning")) {
-        return "Good morninggg ☀️😊";
-    }
-
-    if (text.includes("good night")) {
-        return "Goodnight ❤️ sleep well!";
-    }
-
-    return "That's interesting 👀 tell me more.";
+    return saved.slice(-20);
 }
