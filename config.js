@@ -29,7 +29,7 @@ const APP_CONFIG = {
 
     backend: {
 
-        apiEndpoint: ""
+        apiEndpoint: "https://imessage-clone.zarfj5ob.workers.dev/"
 
     }
 
